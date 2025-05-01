@@ -8,17 +8,17 @@ locals {
   suffix      = lower(trimspace(var.use_random_suffix ? substr(lower(random_id.random.hex), 1, 5) : var.suffix))
   name_suffix = local.suffix != null ? "${local.suffix}" : ""
 
-  aks_name                     = "${var.aks_name}-${local.name_suffix}"
-  appinsights_name             = "${var.appinsights_name}-${local.name_suffix}"
-  log_analytics_workspace_name = "${var.log_analytics_workspace_name}-${local.name_suffix}"
-  nsg_name                     = "${var.nsg_name}-${local.name_suffix}"
-  nvidia_device_plugin_name    = "${var.nvidia_device_plugin_name}-${local.name_suffix}"
-  ollama_service_name          = "ollama-${local.name_suffix}"
-  pip_name                     = "${var.pip_name}-${local.name_suffix}"
-  resource_group_name          = "${var.resource_group_name}-${local.name_suffix}"
-  ssk_key_name                 = "${var.ssh_key_name}-${local.name_suffix}"
-  subnet_name                  = "${var.subnet_name}-${local.name_suffix}"
-  vnet_name                    = "${var.vnet_name}-${local.name_suffix}"
+  name_aks                     = "${var.aks_name}-${local.name_suffix}"
+  name_app_insights            = "${var.appinsights_name}-${local.name_suffix}"
+  name_log_analytics_workspace = "${var.log_analytics_workspace_name}-${local.name_suffix}"
+  name_nsg                     = "${var.nsg_name}-${local.name_suffix}"
+  name_nvidia_device_plugin    = "${var.nvidia_device_plugin_name}-${local.name_suffix}"
+  name_ollama_service          = "ollama-${local.name_suffix}"
+  name_pip                     = "${var.pip_name}-${local.name_suffix}"
+  name_resource_group          = "${var.resource_group_name}-${local.name_suffix}"
+  name_ssk_key                 = "${var.ssh_key_name}-${local.name_suffix}"
+  name_subnet                  = "${var.subnet_name}-${local.name_suffix}"
+  name_vnet                    = "${var.vnet_name}-${local.name_suffix}"
 
   tags = merge(var.tags, {
     createdAt = "${formatdate("YYYY-MM-DD hh:mm:ss", timestamp())} UTC"
@@ -27,7 +27,7 @@ locals {
 }
 
 resource "azurerm_resource_group" "rg" {
-  name     = local.resource_group_name
+  name     = local.name_resource_group
   location = var.location
   tags     = local.tags
 
@@ -40,7 +40,7 @@ resource "azurerm_resource_group" "rg" {
 
 module "log_analytics_workspace" {
   source              = "./modules/log"
-  name                = local.log_analytics_workspace_name
+  name                = local.name_log_analytics_workspace
   location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
   tags                = local.tags
@@ -48,7 +48,7 @@ module "log_analytics_workspace" {
 
 module "application_insights" {
   source                     = "./modules/appi"
-  name                       = local.appinsights_name
+  name                       = local.name_app_insights
   location                   = var.location
   resource_group_name        = azurerm_resource_group.rg.name
   log_analytics_workspace_id = module.log_analytics_workspace.id
@@ -59,11 +59,11 @@ module "network" {
   source                     = "./modules/network"
   resource_group_name        = azurerm_resource_group.rg.name
   location                   = azurerm_resource_group.rg.location
-  vnet_name                  = local.vnet_name
+  vnet_name                  = local.name_vnet
   vnet_address_space         = var.vnet_address_space
-  subnet_name                = local.subnet_name
+  subnet_name                = local.name_subnet
   subnet_address_space       = var.subnet_address_space
-  nsg_name                   = local.nsg_name
+  nsg_name                   = local.name_nsg
   log_analytics_workspace_id = module.log_analytics_workspace.id
   tags                       = local.tags
 }
@@ -72,7 +72,7 @@ module "public_ip" {
   source              = "./modules/pip"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
-  name                = local.pip_name
+  name                = local.name_pip
   tags                = local.tags
 }
 
@@ -81,7 +81,7 @@ module "ssh" {
   resource_group_name = azurerm_resource_group.rg.name
   resource_group_id   = azurerm_resource_group.rg.id
   location            = var.location
-  name                = local.ssk_key_name
+  name                = local.name_ssk_key
   tags                = local.tags
 }
 
@@ -90,7 +90,7 @@ module "aks" {
   resource_group_id               = azurerm_resource_group.rg.id
   resource_group_name             = azurerm_resource_group.rg.name
   location                        = var.location
-  name                            = local.aks_name
+  name                            = local.name_aks
   ssh_public_key                  = module.ssh.public_key
   sku                             = var.aks_sku
   dns_prefix                      = lower(var.aks_dns_prefix)
@@ -109,24 +109,24 @@ module "aks" {
 
 module "nvidia" {
   source        = "./modules/nvidia"
-  name          = local.nvidia_device_plugin_name
+  name          = local.name_nvidia_device_plugin
   chart_version = var.nvidia_device_plugin_chart_version
   image_tag     = var.nvidia_device_plugin_image_tag
-  namespace     = local.ollama_service_name
+  namespace     = local.name_ollama_service
 
   depends_on = [module.aks]
 }
 
 module "ollama" {
   source                      = "./modules/ollama"
-  name                        = local.ollama_service_name
+  name                        = local.name_ollama_service
   chart_version               = var.ollama_chart_version
   image_tag                   = var.ollama_image_tag
   port                        = var.ollama_port
   public_ip_address           = module.public_ip.public_ip_address
   resource_group_name         = azurerm_resource_group.rg.name
   network_security_group_name = module.network.nsg_name
-  namespace                   = local.ollama_service_name
+  namespace                   = local.name_ollama_service
   model_name                  = var.ollama_model_name
 
   depends_on = [module.nvidia]

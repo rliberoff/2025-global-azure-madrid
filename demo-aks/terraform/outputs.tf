@@ -1,5 +1,5 @@
 locals {
-  ollama_fqdn = "http://${local.ollama_service_name}.${var.location}.cloudapp.azure.com:${var.ollama_port}"
+  ollama_fqdn = "http://${local.name_ollama_service}.${var.location}.cloudapp.azure.com:${var.ollama_port}"
   next_steps  = <<-EOT
     Please wait a few minutes for the models deployed into the Ollama service to be downloaded and initializated. Then, you can access the Ollama service, for example using `curl` like this:
 
@@ -14,12 +14,12 @@ output "ollama_fqdn" {
 
 output "resource_group_name" {
   description = "The name of the resource group."
-  value       = local.resource_group_name
+  value       = local.name_resource_group
 }
 
 output "aks_name" {
   description = "The name of the Azure Kubernetes Service (AKS)."
-  value       = local.aks_name
+  value       = local.name_aks
 }
 
 output "NEXT_STEPS" {
