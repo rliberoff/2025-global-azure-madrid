@@ -20,3 +20,8 @@ output "host" {
   description = "Specifies the host of the Azure Kubernetes Service (AKS) cluster."
   value       = azurerm_kubernetes_cluster.aks.kube_config.0.host
 }
+
+output "name" {
+  description = "Specifies the name of the Azure Kubernetes Service (AKS) cluster."
+  value       = azurerm_kubernetes_cluster.aks.name
+}

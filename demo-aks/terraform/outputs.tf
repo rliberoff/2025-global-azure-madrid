@@ -14,12 +14,12 @@ output "ollama_fqdn" {
 
 output "resource_group_name" {
   description = "The name of the resource group."
-  value       = local.name_resource_group
+  value       = azurerm_resource_group.rg.name
 }
 
 output "aks_name" {
   description = "The name of the Azure Kubernetes Service (AKS)."
-  value       = local.name_aks
+  value       = module.aks.name
 }
 
 output "NEXT_STEPS" {
